@@ -78,6 +78,64 @@ function App() {
       setSaving(false);
     }
   }
+  // Toggle task completion
+async function toggleTask(task) {
+  setError("");
+
+  try {
+    const response = await fetch(
+      `${API_URL}/tasks/${task.id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: task.title,
+          description: task.description,
+          completed: !task.completed,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to update task");
+    }
+
+    const updatedTask = await response.json();
+
+    setTasks((previousTasks) =>
+      previousTasks.map((item) =>
+        item.id === updatedTask.id ? updatedTask : item
+      )
+    );
+  } catch (error) {
+    setError(error.message);
+  }
+}
+// Delete a task
+async function deleteTask(taskId) {
+  setError("");
+
+  try {
+    const response = await fetch(
+      `${API_URL}/tasks/${taskId}`,
+      {
+        method: "DELETE",
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to delete task");
+    }
+
+    setTasks((previousTasks) =>
+      previousTasks.filter((task) => task.id !== taskId)
+    );
+  } catch (error) {
+    setError(error.message);
+  }
+}
 
   return (
     <main style={{ padding: "40px", fontFamily: "Arial" }}>
@@ -139,6 +197,35 @@ function App() {
           <p>
             Status: {task.completed ? "Completed" : "Pending"}
           </p>
+          <button
+  onClick={() => toggleTask(task)}
+  style={{
+    backgroundColor: "#16a34a",
+    color: "white",
+    padding: "10px",
+    margin: "5px",
+    border: "none",
+    borderRadius: "5px",
+    cursor: "pointer",
+  }}
+>
+  {task.completed ? "Undo" : "Complete Task"}
+</button>
+
+<button
+  onClick={() => deleteTask(task.id)}
+  style={{
+    backgroundColor: "#dc2626",
+    color: "white",
+    padding: "10px",
+    margin: "5px",
+    border: "none",
+    borderRadius: "5px",
+    cursor: "pointer",
+  }}
+>
+  Delete Task
+</button>
         </div>
       ))}
     </main>
