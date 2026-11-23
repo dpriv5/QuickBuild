@@ -195,6 +195,22 @@ function StatCard({ label, value, icon, tone, loading, unavailable }) {
   );
 }
 
+function formatDueDate(value) {
+  if (!value) return "";
+  const [year, month, day] = value.split("-").map(Number);
+  if (!year || !month || !day) return value;
+  return new Date(year, month - 1, day).toLocaleDateString("en-GB", {
+    day: "numeric", month: "short", year: "numeric",
+  });
+}
+
+function isOverdue(task) {
+  if (task.completed || !task.due_date) return false;
+  const today = new Date();
+  const localToday = [today.getFullYear(), String(today.getMonth() + 1).padStart(2, "0"), String(today.getDate()).padStart(2, "0")].join("-");
+  return task.due_date < localToday;
+}
+
 function TaskCard({ task, busy, confirming, onToggle, onDelete }) {
   const done = Boolean(task.completed);
 
@@ -218,6 +234,14 @@ function TaskCard({ task, busy, confirming, onToggle, onDelete }) {
             <span className="badge-dot" aria-hidden="true" />
             {done ? "Completed" : "Pending"}
           </span>
+          <span className={`qb-priority qb-priority-${(task.priority || "Medium").toLowerCase()}`}>
+            {task.priority || "Medium"} priority
+          </span>
+          {task.due_date && (
+            <span className={`qb-deadline${isOverdue(task) ? " qb-overdue" : ""}`}>
+              {isOverdue(task) ? "Overdue · " : "Due · "}{formatDueDate(task.due_date)}
+            </span>
+          )}
           <span className="task-key">QB-{task.id}</span>
         </div>
       </div>
@@ -292,6 +316,8 @@ function App() {
   // Create form
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [priority, setPriority] = useState("Medium");
+  const [dueDate, setDueDate] = useState("");
   const [saving, setSaving] = useState(false);
 
   // UI
@@ -331,10 +357,19 @@ function App() {
   }, []);
 
   useEffect(() => {
-    fetchHealth();
-    fetchTasks();
-  }, [fetchHealth, fetchTasks]);
+    const controller = new AbortController();
 
+    const loadInitialData = async () => {
+      await Promise.all([
+        fetchHealth(),
+        fetchTasks(),
+      ]);
+    };
+
+    void loadInitialData();
+
+    return () => controller.abort();
+  }, [fetchHealth, fetchTasks]);
   function retryConnection() {
     setHealth({ state: "checking", detail: "" });
     fetchHealth();
@@ -379,6 +414,8 @@ function App() {
           title: title.trim(),
           description: description.trim(),
           completed: false,
+          priority,
+          due_date: dueDate || null,
         },
         errorMessage: "Failed to create task",
       });
@@ -386,6 +423,8 @@ function App() {
       setTasks((previousTasks) => [...previousTasks, newTask]);
       setTitle("");
       setDescription("");
+      setPriority("Medium");
+      setDueDate("");
       setAnnouncement(`Task "${newTask.title}" created`);
       titleRef.current?.focus();
     } catch (err) {
@@ -409,6 +448,8 @@ function App() {
           title: task.title,
           description: task.description,
           completed: !task.completed,
+          priority: task.priority || "Medium",
+          due_date: task.due_date || null,
         },
         errorMessage: "Failed to update task",
       });
@@ -802,6 +843,27 @@ function App() {
                   value={description}
                   onChange={(event) => setDescription(event.target.value)}
                   autoComplete="off"
+                />
+              </div>
+              <div className="field qb-extra-field">
+                <label htmlFor="task-priority">Priority</label>
+                <select
+                  id="task-priority"
+                  value={priority}
+                  onChange={(event) => setPriority(event.target.value)}
+                >
+                  <option value="Low">Low</option>
+                  <option value="Medium">Medium</option>
+                  <option value="High">High</option>
+                </select>
+              </div>
+              <div className="field qb-extra-field">
+                <label htmlFor="task-due-date">Deadline <span className="optional">(optional)</span></label>
+                <input
+                  id="task-due-date"
+                  type="date"
+                  value={dueDate}
+                  onChange={(event) => setDueDate(event.target.value)}
                 />
               </div>
               <button

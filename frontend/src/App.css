@@ -1136,3 +1136,35 @@
     opacity: 0;
   }
 }
+
+/* QuickBuild v2: priorities and deadlines */
+.qb-extra-field select,
+.qb-extra-field input[type="date"] {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  color: var(--text, #f4f1ff);
+  background: var(--surface-2, #252238);
+  border: 1px solid var(--border, #49435f);
+  border-radius: 10px;
+  font: inherit;
+  color-scheme: dark;
+}
+.qb-extra-field select:focus-visible,
+.qb-extra-field input:focus-visible {
+  outline: 2px solid #a78bfa;
+  outline-offset: 2px;
+}
+.qb-priority, .qb-deadline {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.qb-priority-high { color: #fecaca; background: #7f1d1d55; }
+.qb-priority-medium { color: #fde68a; background: #854d0e55; }
+.qb-priority-low { color: #bbf7d0; background: #16653455; }
+.qb-deadline { color: #c4b5fd; background: #6d28d933; }
+.qb-overdue { color: #fecaca; background: #7f1d1d55; }

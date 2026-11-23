@@ -1,5 +1,6 @@
 
-from typing import Optional
+from datetime import date
+from typing import Literal, Optional
 
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,7 +15,7 @@ from models import Task
 app = FastAPI(
     title="QuickBuild API",
     description="Backend API for the QuickBuild task management application",
-    version="1.0.0"
+    version="1.1.0"
 )
 
 
@@ -33,6 +34,10 @@ class TaskSchema(BaseModel):
     title: str = Field(min_length=1, max_length=255)
     description: Optional[str] = None
     completed: bool = False
+
+    # New fields
+    priority: Literal["Low", "Medium", "High"] = "Medium"
+    due_date: Optional[date] = None
 
 
 # Welcome endpoint
@@ -56,7 +61,9 @@ def create_task(task: TaskSchema, db: Session = Depends(get_db)):
     new_task = Task(
         title=task.title,
         description=task.description,
-        completed=task.completed
+        completed=task.completed,
+        priority=task.priority,
+        due_date=task.due_date
     )
 
     db.add(new_task)
@@ -87,6 +94,10 @@ def update_task(
     task.title = updated_task.title
     task.description = updated_task.description
     task.completed = updated_task.completed
+
+    # New fields
+    task.priority = updated_task.priority
+    task.due_date = updated_task.due_date
 
     db.commit()
     db.refresh(task)
