@@ -3,7 +3,8 @@ import os
 import pytest
 from fastapi.testclient import TestClient
 
-os.environ["DATABASE_URL"] = (
+os.environ["DATABASE_URL"] = os.getenv(
+    "TEST_DATABASE_URL",
     "postgresql+psycopg:///quickbuild_test"
 )
 
